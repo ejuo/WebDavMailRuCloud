@@ -3,7 +3,7 @@
 Based on  Console version (https://github.com/yar229/WebDavMailRuCloud)
 
 **Requirements:**
-* Microsoft .NET Framework 4.6.1
+* Microsoft .NET Framework 4.5
 
 **Big thanks** to
 * [Ramon de Klein](https://github.com/ramondeklein) for [nwebdav server](https://github.com/ramondeklein/nwebdav)
