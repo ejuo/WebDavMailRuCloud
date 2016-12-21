@@ -72,6 +72,7 @@ namespace WDMRC.Form
 		private void button3_Click(object sender, EventArgs e)
 		{
 			cancellationTokenSource.Cancel();
+		    httpListener.Stop();
 			
 			userToolStripMenuItem.Visible = false;
 			SecondAuthPanel.Visible = false;
@@ -84,22 +85,19 @@ namespace WDMRC.Form
 		    userToolStripMenuItem.Visible = true;
 			WindowState = FormWindowState.Minimized;
 		    notifyIcon1.BalloonTipText = @"Connecting successful";
-			notifyIcon1.ShowBalloonTip(250);
+			notifyIcon1.ShowBalloonTip(100);
 
-		    if (httpListener == null)
-		    {
-				var webdavProtocol = ConfigurationManager.AppSettings["protocol"] ?? "http";
-				var webdavIp = ConfigurationManager.AppSettings["server"] ?? "127.0.0.1";
-				var webdavPort = ConfigurationManager.AppSettings["port"] ?? "8080";
+            var webdavProtocol = ConfigurationManager.AppSettings["protocol"] ?? "http";
+            var webdavIp = ConfigurationManager.AppSettings["server"] ?? "127.0.0.1";
+            var webdavPort = ConfigurationManager.AppSettings["port"] ?? "8080";
 
-				httpListener = new HttpListener();
-				httpListener.Prefixes.Add($"{webdavProtocol}://{webdavIp}:{webdavPort}/");
+            httpListener = new HttpListener();
+            httpListener.Prefixes.Add($"{webdavProtocol}://{webdavIp}:{webdavPort}/");
 
-				httpListener.AuthenticationSchemes = AuthenticationSchemes.Anonymous;
+            httpListener.AuthenticationSchemes = AuthenticationSchemes.Anonymous;
 
-				// Start the HTTP listener
-				httpListener.Start();
-		    }
+            // Start the HTTP listener
+            httpListener.Start();
 			StartListener();
 	    }
 
@@ -123,36 +121,42 @@ namespace WDMRC.Form
 			using (var sem = new SemaphoreSlim(maxThreadCount))
 			{
 				var semclo = sem;
-				HttpListenerContext httpListenerContext;
-				while (
-						!cancellationToken.IsCancellationRequested &&
-						(httpListenerContext = await httpListener.GetContextAsync().ConfigureAwait(false)) != null
-					  )
+			    while ( !cancellationToken.IsCancellationRequested )
 				{
-					IHttpContext httpContext= new HttpContext(httpListenerContext);
+				    HttpListenerContext httpListenerContext;
+				    try
+				    {
+				        httpListenerContext = await httpListener.GetContextAsync().ConfigureAwait(false);
+				    }
+				    catch (Exception)
+				    {
+				        return;
+				    }
+
+				    IHttpContext httpContext= new HttpContext(httpListenerContext);
 
 					await semclo.WaitAsync(cancellationToken);
-					Task tsk = Task
-						.Run(async () =>
-						{
-							try
-							{
-								await webDavDispatcher.DispatchRequestAsync(httpContext);
-							}
-							catch (Exception ex)
-							{
-								throw new Exception(ex.Message);
-							}
+					await Task
+					    .Run(async () =>
+					    {
+					        try
+					        {
+					            await webDavDispatcher.DispatchRequestAsync(httpContext);
+					        }
+					        catch (Exception ex)
+					        {
+					            throw new Exception(ex.Message);
+					        }
 
-						}, cancellationToken)
-						.ContinueWith(t => semclo.Release(), cancellationToken);
+					    }, cancellationToken)
+					    .ContinueWith(t => semclo.Release(), cancellationToken);
 				}
 			}
 		}
 
 		private void Authentication_Resize(object sender, EventArgs e)
 		{
-			if (WindowState == FormWindowState.Minimized)
+		    if (WindowState == FormWindowState.Minimized)
 			{
 				ShowInTaskbar = false;
 				notifyIcon1.Visible = true;
