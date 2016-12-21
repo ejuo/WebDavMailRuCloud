@@ -2,7 +2,7 @@
 using System.Windows.Forms;
 using NWebDav.Server.Logging;
 
-namespace WDMRC.Form
+namespace MailRuCloudWebDav
 {
 	static class Program
 	{

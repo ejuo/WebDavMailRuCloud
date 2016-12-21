@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Configuration;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
@@ -8,9 +9,8 @@ using NWebDav.Server.Http;
 using NWebDav.Server.HttpListener;
 using WebDavMailRuCloudStore;
 using YaR.WebDavMailRu.CloudStore.Mailru.StoreBase;
-using System.Configuration;
 
-namespace WDMRC.Form
+namespace MailRuCloudWebDav
 {
     public partial class Authentication : System.Windows.Forms.Form
     {

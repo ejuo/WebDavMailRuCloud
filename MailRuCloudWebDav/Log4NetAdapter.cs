@@ -1,7 +1,7 @@
 using System;
 using NWebDav.Server.Logging;
 
-namespace WDMRC.Form
+namespace MailRuCloudWebDav
 {
     public class Log4NetAdapter : ILoggerFactory
     {
